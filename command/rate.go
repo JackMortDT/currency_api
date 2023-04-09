@@ -2,7 +2,6 @@ package command
 
 import (
 	"currency_api/domain"
-	"log"
 	"time"
 )
 
@@ -21,8 +20,6 @@ type Data map[string]struct {
 }
 
 func ConvertToCurrencyRates(rate *Rate) []*domain.CurrencyRate {
-	log.Println("Hasta aqui llego D:")
-	log.Println(rate)
 	var currencyRates []*domain.CurrencyRate
 
 	lastUpdated, err := time.Parse(time.RFC3339, rate.Meta.LastUpdated)
