@@ -22,4 +22,5 @@ func connectToDatabase() *gorm.DB {
 
 func runMigrations(db *gorm.DB) {
 	db.AutoMigrate(&domain.CurrencyRate{})
+	db.AutoMigrate(&domain.CallRecord{})
 }
