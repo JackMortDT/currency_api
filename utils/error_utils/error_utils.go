@@ -41,3 +41,11 @@ func NewBadRequestError(message string) MessageErr {
 		ErrError:   "bad_request",
 	}
 }
+
+func NewInternalServerError(message string) MessageErr {
+	return &messageErr{
+		ErrMessage: message,
+		ErrStatus:  http.StatusInternalServerError,
+		ErrError:   "server_error",
+	}
+}
