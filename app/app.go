@@ -18,6 +18,8 @@ func init() {
 }
 
 func StartApp() {
+	db := connectToDatabase()
+	startRepositories(db)
 	routes()
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
