@@ -49,3 +49,11 @@ func NewInternalServerError(message string) MessageErr {
 		ErrError:   "server_error",
 	}
 }
+
+func NewServiceUnavailableError(message string) MessageErr {
+	return &messageErr{
+		ErrMessage: message,
+		ErrStatus:  http.StatusServiceUnavailable,
+		ErrError:   "service_unavailable",
+	}
+}
