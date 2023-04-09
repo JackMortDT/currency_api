@@ -1,8 +1,7 @@
 name: Generate code coverage badge
 on:
-  pull_request:
-    branches:
-      - master
+  push:
+    branches: ["master"]
 jobs:
   test:
     runs-on: ubuntu-latest
