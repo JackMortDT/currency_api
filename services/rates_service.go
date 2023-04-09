@@ -7,16 +7,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func RequestCurrencyRates() *command.Rate {
 	currencyUrl := os.Getenv("CURRENCY_URL")
 	apiKey := os.Getenv("API_KEY")
 
+	start := time.Now()
 	resp, err := http.Get(currencyUrl + apiKey)
+	duration := time.Since(start).Milliseconds()
+
 	if err != nil {
 		log.Print(err)
 	}
+	defer resp.Body.Close()
 
 	var rates command.Rate
 	err = json.NewDecoder(resp.Body).Decode(&rates)
@@ -25,6 +30,7 @@ func RequestCurrencyRates() *command.Rate {
 	}
 
 	saveCurrencyResponse(&rates)
+	saveCallRecord(start, duration)
 
 	return &rates
 }
@@ -34,4 +40,11 @@ func saveCurrencyResponse(rates *command.Rate) {
 	for _, currencyRate := range currencyRates {
 		domain.CurrencyRepo.CreateOrUpdate(currencyRate)
 	}
+}
+
+func saveCallRecord(requestDate time.Time, duration int64) {
+	domain.CallRecordRepo.Create(&domain.CallRecord{
+		RequestDate: requestDate,
+		Duration:    duration,
+	})
 }
