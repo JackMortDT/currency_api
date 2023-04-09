@@ -1,50 +1,32 @@
-name: Generate code coverage badge
-on:
-  push:
-    branches: ["master"]
+# Copyright 2020-present Montgomery Edwards⁴⁴⁸ (github.com/x448).
+# This file is licensed under the MIT License. See LICENSE at https://github.com/x448/workflows for the full text.
+#
+# CI Go Cover 2020.1.28.
+# This GitHub Actions workflow checks if Go (Golang) code coverage satisfies the required minimum.
+# The required minimum is specified in the workflow name to keep badge.svg and verified minimum in sync.
+#
+# To help protect your privacy, this workflow avoids external services.
+# This workflow simply runs `go test -short -cover` --> grep --> python.
+# The python script is embedded and readable in this file.
+# 
+# Steps to install and set minimum required coverage:
+# 0. Copy this file to github.com/OWNER_NAME/REPO_NAME/.github/workflows/ci-go-cover.yml
+# 1. Change workflow name from "cover 100%" to "cover ≥92.5%". Script will automatically use 92.5%.  
+# 2. Update README.md to use the new path to badge.svg because the path includes the workflow name.
+
+name: coverage
+on: [push]
 jobs:
-  test:
+  # Verify minimum coverage is reached using `go test -short -cover` on latest-ubuntu with default version of Go.
+  # The grep expression can't be too strict, it needed to be relaxed to work with different versions of Go.
+  cover:
+    name: Coverage
     runs-on: ubuntu-latest
-    name: Update coverage badge
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
-          fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
-      - name: Setup go
-        uses: actions/setup-go@v2
-        with:
-          go-version: '1.14.4'
-      - uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Run Test
+      - name: Go Coverage
         run: |
-          go test -v ./... -covermode=count -coverprofile=coverage.out
-          go tool cover -func=coverage.out -o=coverage.out
-      - name: Go Coverage Badge # Pass the `coverage.out` output to this action
-        uses: tj-actions/coverage-badge-go@v2
-        with:
-          filename: coverage.out
-      - name: Verify Changed files
-        uses: tj-actions/verify-changed-files@v12
-        id: verify-changed-files
-        with:
-          files: README.md
-      - name: Commit changes
-        if: steps.verify-changed-files.outputs.files_changed == 'true'
-        run: |
-          git config --local user.email "soul6496@gmail.com"
-          git config --local user.name "Luis Sastre 🦎"
-          git add README.md
-          git commit -m "chore: Updated coverage badge."
-      - name: Push changes
-        if: steps.verify-changed-files.outputs.files_changed == 'true'
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ github.token }}
-          branch: ${{ github.head_ref }}
+          go version
+          go test -short -cover | grep "^.*coverage:.*of statements$" | python -c "import os,re,sys; cover_rpt = sys.stdin.read(); print(cover_rpt) if len(cover_rpt) != 0 and len(cover_rpt.splitlines()) == 1 else sys.exit(1); min_cover = float(re.findall(r'\d*\.\d+|\d+', os.environ['GITHUB_WORKFLOW'])[0]); cover = float(re.findall(r'\d*\.\d+|\d+', cover_rpt)[0]); sys.exit(1) if (cover > 100) or (cover < min_cover) else sys.exit(0)"
+        shell: bash
