@@ -6,5 +6,6 @@ import (
 )
 
 func routes() {
-	http.HandleFunc("/currencies", controller.GetCurrencyRates)
+	http.HandleFunc("/currencies/", controller.GetCurrencyRates)
+	http.HandleFunc("/save_currencies", controller.CreateNewCurrencies)
 }
