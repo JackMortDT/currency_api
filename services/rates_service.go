@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+func GetCurrencyRates(currency string, finit, fend time.Time) ([]domain.CurrencyRate, error_utils.MessageErr) {
+	currencies := domain.CurrencyRepo.GetByCurrencyAndBetweenDates(currency, finit, fend)
+	return currencies, nil
+}
+
 func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 	start := time.Now()
 	resp, requestErr := apiRequest()

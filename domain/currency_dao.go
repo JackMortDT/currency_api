@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -12,6 +14,7 @@ type currencyRepoInterface interface {
 	Initialize(*gorm.DB) *gorm.DB
 	GetAll() ([]CurrencyRate, error)
 	CreateOrUpdate(*CurrencyRate) error
+	GetByCurrencyAndBetweenDates(string, time.Time, time.Time) []CurrencyRate
 }
 
 type currencyRepo struct {
@@ -44,4 +47,19 @@ func (cR *currencyRepo) CreateOrUpdate(currency *CurrencyRate) error {
 	}
 	return nil
 
+}
+
+func (cR *currencyRepo) GetByCurrencyAndBetweenDates(currency string, finit, fend time.Time) []CurrencyRate {
+	var currencies []CurrencyRate
+	query := cR.db
+
+	if currency != "all" {
+		query = query.Where(CurrencyRate{Code: currency})
+	}
+
+	result := query.Find(&currencies)
+	if result.Error != nil {
+		//
+	}
+	return currencies
 }
