@@ -14,7 +14,6 @@ import (
 )
 
 func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
-
 	start := time.Now()
 	resp, requestErr := apiRequest()
 	if requestErr != nil {
