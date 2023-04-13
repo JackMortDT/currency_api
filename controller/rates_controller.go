@@ -3,7 +3,6 @@ package controller
 import (
 	"currency_api/services"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -67,5 +66,17 @@ func GetCurrencyRates(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateNewCurrencies(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Datos consultados")
+	rates, err := services.RequestCurrencyRates()
+	if err != nil {
+		http.Error(w, err.Error(), err.Status())
+	}
+
+	jsonBytes, jsonErr := json.Marshal(rates)
+	if jsonErr != nil {
+		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
 }
