@@ -2,11 +2,11 @@ package controller
 
 import (
 	"currency_api/services"
+	"currency_api/utils"
 	"encoding/json"
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 )
 
 func GetCurrencyRates(w http.ResponseWriter, r *http.Request) {
@@ -28,24 +28,17 @@ func GetCurrencyRates(w http.ResponseWriter, r *http.Request) {
 	currency = strings.ToUpper(currency)
 
 	finitStr := r.URL.Query().Get("finit")
-	fendStr := r.URL.Query().Get("fend")
-	var finit, fend time.Time
-	var err error
-
-	if finitStr != "" {
-		finit, err = time.Parse("2006-01-02T15:04:05", finitStr)
-		if err != nil {
-			http.Error(w, "Invalid finit format", http.StatusBadRequest)
-			return
-		}
+	finit, parseError := utils.ParseStringToDate(finitStr, "finit")
+	if parseError != nil {
+		http.Error(w, parseError.Error(), parseError.Status())
+		return
 	}
 
-	if fendStr != "" {
-		fend, err = time.Parse("2006-01-02T15:04:05", fendStr)
-		if err != nil {
-			http.Error(w, "Invalid fend format", http.StatusBadRequest)
-			return
-		}
+	fendStr := r.URL.Query().Get("fend")
+	fend, parseError := utils.ParseStringToDate(fendStr, "finit")
+	if parseError != nil {
+		http.Error(w, parseError.Error(), parseError.Status())
+		return
 	}
 
 	rates, currencyErr := services.GetCurrencyRates(currency, finit, fend)
@@ -69,6 +62,7 @@ func CreateNewCurrencies(w http.ResponseWriter, r *http.Request) {
 	rates, err := services.RequestCurrencyRates()
 	if err != nil {
 		http.Error(w, err.Error(), err.Status())
+		return
 	}
 
 	jsonBytes, jsonErr := json.Marshal(rates)
