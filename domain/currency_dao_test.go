@@ -36,8 +36,11 @@ var currencies = []*CurrencyRate{
 
 func TestCurrencyRepo(t *testing.T) {
 	cr := &currencyRepo{}
-	_, err := fakeDatabaseConnection(cr)
+	db, err := fakeDatabaseConnection(cr)
 	assert.NoError(t, err)
+	err = db.AutoMigrate(&CurrencyRate{})
+	assert.NoError(t, err)
+
 	for _, insert := range currencies {
 		err := cr.CreateOrUpdate(insert)
 		assert.NoError(t, err)
@@ -51,9 +54,6 @@ func TestCurrencyRepo(t *testing.T) {
 
 	t.Run("TestCreateOrUpdate", func(t *testing.T) {
 		db, err := fakeDatabaseConnection(cr)
-		assert.NoError(t, err)
-
-		err = db.AutoMigrate(&CurrencyRate{})
 		assert.NoError(t, err)
 
 		var result CurrencyRate
