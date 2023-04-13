@@ -80,7 +80,8 @@ func TestCurrencyRepo(t *testing.T) {
 		fend := time.Now()
 
 		// Test 2: ALL currencis and finit
-		result := cr.GetByCurrencyAndBetweenDates("ALL", finit, fend)
+		result, error := cr.GetByCurrencyAndBetweenDates("ALL", finit, fend)
+		assert.NoError(t, error)
 		assert.NotNil(t, result)
 		assert.IsType(t, []CurrencyRate{}, result)
 		assert.Greater(t, len(result), 1)
@@ -90,7 +91,8 @@ func TestCurrencyRepo(t *testing.T) {
 		}
 
 		// Test 2: USD currency and finit
-		result = cr.GetByCurrencyAndBetweenDates(currency, finit, time.Time{})
+		result, error = cr.GetByCurrencyAndBetweenDates(currency, finit, time.Time{})
+		assert.NoError(t, error)
 		assert.NotNil(t, result)
 		assert.IsType(t, []CurrencyRate{}, result)
 		assert.LessOrEqual(t, len(result), 1)
@@ -99,7 +101,8 @@ func TestCurrencyRepo(t *testing.T) {
 		}
 
 		// Test 3: USD currency and fend
-		result = cr.GetByCurrencyAndBetweenDates(currency, time.Time{}, fend)
+		result, error = cr.GetByCurrencyAndBetweenDates(currency, time.Time{}, fend)
+		assert.NoError(t, error)
 		assert.NotNil(t, result)
 		assert.IsType(t, []CurrencyRate{}, result)
 		assert.Greater(t, len(result), 0)
@@ -108,7 +111,8 @@ func TestCurrencyRepo(t *testing.T) {
 		}
 
 		// Test 4: USD currency and between dates
-		result = cr.GetByCurrencyAndBetweenDates(currency, finit, fend)
+		result, error = cr.GetByCurrencyAndBetweenDates(currency, finit, fend)
+		assert.NoError(t, error)
 		assert.NotNil(t, result)
 		assert.IsType(t, []CurrencyRate{}, result)
 		assert.Greater(t, len(result), 0)

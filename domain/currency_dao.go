@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"currency_api/utils/error_utils"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -12,9 +14,9 @@ var (
 
 type currencyRepoInterface interface {
 	Initialize(*gorm.DB) *gorm.DB
-	GetAll() ([]CurrencyRate, error)
-	CreateOrUpdate(*CurrencyRate) error
-	GetByCurrencyAndBetweenDates(string, time.Time, time.Time) []CurrencyRate
+	GetAll() ([]CurrencyRate, error_utils.MessageErr)
+	CreateOrUpdate(*CurrencyRate) error_utils.MessageErr
+	GetByCurrencyAndBetweenDates(string, time.Time, time.Time) ([]CurrencyRate, error_utils.MessageErr)
 }
 
 type currencyRepo struct {
@@ -27,29 +29,31 @@ func (cR *currencyRepo) Initialize(db *gorm.DB) *gorm.DB {
 	return cR.db
 }
 
-func (cR *currencyRepo) GetAll() ([]CurrencyRate, error) {
+func (cR *currencyRepo) GetAll() ([]CurrencyRate, error_utils.MessageErr) {
 	var currencies []CurrencyRate
 	result := cR.db.Find(&currencies)
 	if result.Error != nil {
-		return nil, result.Error
+		error := fmt.Sprintf("Error when trying to get records: %s", result.Error)
+		return nil, error_utils.NewInternalServerError(error)
 	}
 	return currencies, nil
 }
 
-func (cR *currencyRepo) CreateOrUpdate(currency *CurrencyRate) error {
+func (cR *currencyRepo) CreateOrUpdate(currency *CurrencyRate) error_utils.MessageErr {
 	result := cR.db.
 		Where(CurrencyRate{Code: currency.Code, UpdatedAt: currency.UpdatedAt}).
 		Assign(currency).
 		FirstOrCreate(currency)
 
 	if result.Error != nil {
-		return result.Error
+		error := fmt.Sprintf("Error when trying to save or update record record: %s", result.Error)
+		return error_utils.NewInternalServerError(error)
 	}
-	return nil
 
+	return nil
 }
 
-func (cR *currencyRepo) GetByCurrencyAndBetweenDates(currency string, finit, fend time.Time) []CurrencyRate {
+func (cR *currencyRepo) GetByCurrencyAndBetweenDates(currency string, finit, fend time.Time) ([]CurrencyRate, error_utils.MessageErr) {
 	var currencies []CurrencyRate
 	query := cR.db
 
@@ -67,7 +71,8 @@ func (cR *currencyRepo) GetByCurrencyAndBetweenDates(currency string, finit, fen
 
 	result := query.Find(&currencies)
 	if result.Error != nil {
-		//
+		error := fmt.Sprintf("Error when trying to get records: %s", result.Error)
+		return nil, error_utils.NewInternalServerError(error)
 	}
-	return currencies
+	return currencies, nil
 }
