@@ -9,64 +9,124 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestInitialize(t *testing.T) {
-	dbResult, db, err := fakeDatabaseConnection()
-	assert.NoError(t, err)
-	assert.EqualValues(t, dbResult, db)
-}
+var db *gorm.DB
 
-func TestCreateOrUpdate(t *testing.T) {
-	db, _, err := fakeDatabaseConnection()
-	assert.NoError(t, err)
-
-	err = db.AutoMigrate(&CurrencyRate{})
-	assert.NoError(t, err)
-
-	// Test with one register on DB
-	currency := &CurrencyRate{
-		Code:      "MXN",
-		Value:     18.10,
-		UpdatedAt: time.Now(),
-	}
-
-	err = CurrencyRepo.CreateOrUpdate(currency)
-	assert.NoError(t, err)
-
-	var result CurrencyRate
-	db.First(&result, "code = ?", "MXN")
-	assert.EqualValues(t, result.Code, currency.Code)
-	assert.EqualValues(t, result.Value, currency.Value)
-
-	// Test adding other register on DB
-	currency = &CurrencyRate{
+var currencies = []*CurrencyRate{
+	{
 		Code:      "USD",
 		Value:     1,
-		UpdatedAt: time.Now(),
-	}
-
-	err = CurrencyRepo.CreateOrUpdate(currency)
-	assert.NoError(t, err)
-
-	var usdResult CurrencyRate
-	db.First(&usdResult, "code = ?", "USD")
-	assert.EqualValues(t, usdResult.Code, currency.Code)
-	assert.EqualValues(t, usdResult.Value, currency.Value)
-
-	// Test for all registers
-	currencies, err := CurrencyRepo.GetAll()
-	assert.NoError(t, err)
-	assert.EqualValues(t, len(currencies), 2)
-
-	db.Exec("DELETE FROM currency_rates")
-
+		UpdatedAt: time.Now().AddDate(0, 0, -5)},
+	{
+		Code:      "EUR",
+		Value:     0.9,
+		UpdatedAt: time.Now().AddDate(0, 0, -3)},
+	{
+		Code:      "MXN",
+		Value:     18.17,
+		UpdatedAt: time.Now().AddDate(0, 0, -2)},
+	{
+		Code:      "JPY",
+		Value:     110,
+		UpdatedAt: time.Now().AddDate(0, 0, -7)},
+	{
+		Code:      "AUD",
+		Value:     1.5,
+		UpdatedAt: time.Now().AddDate(0, 0, -1)},
 }
 
-func fakeDatabaseConnection() (*gorm.DB, *gorm.DB, error) {
+func TestCurrencyRepo(t *testing.T) {
+	cr := &currencyRepo{}
+	_, err := fakeDatabaseConnection(cr)
+	assert.NoError(t, err)
+	for _, insert := range currencies {
+		err := cr.CreateOrUpdate(insert)
+		assert.NoError(t, err)
+	}
+
+	t.Run("TestInitialize", func(t *testing.T) {
+		db, err := fakeDatabaseConnection(cr)
+		assert.NoError(t, err)
+		assert.NotNil(t, db)
+	})
+
+	t.Run("TestCreateOrUpdate", func(t *testing.T) {
+		db, err := fakeDatabaseConnection(cr)
+		assert.NoError(t, err)
+
+		err = db.AutoMigrate(&CurrencyRate{})
+		assert.NoError(t, err)
+
+		var result CurrencyRate
+		db.First(&result, "code = ?", "MXN")
+		assert.EqualValues(t, result.Code, "MXN")
+		assert.EqualValues(t, result.Value, 18.17)
+
+		var usdResult CurrencyRate
+		db.First(&usdResult, "code = ?", "USD")
+		assert.EqualValues(t, usdResult.Code, "USD")
+		assert.EqualValues(t, usdResult.Value, 1)
+
+		currencies, err := cr.GetAll()
+		assert.NoError(t, err)
+		assert.EqualValues(t, len(currencies), 5)
+	})
+
+	t.Run("TestGetByCurrencyAndBetweenDates", func(t *testing.T) {
+		db, err := fakeDatabaseConnection(cr)
+		assert.NoError(t, err)
+
+		currency := "USD"
+		finit := time.Now().AddDate(0, 0, -10)
+		fend := time.Now()
+
+		// Test 2: ALL currencis and finit
+		result := cr.GetByCurrencyAndBetweenDates("ALL", finit, fend)
+		assert.NotNil(t, result)
+		assert.IsType(t, []CurrencyRate{}, result)
+		assert.Greater(t, len(result), 1)
+		for _, rate := range result {
+			assert.True(t, rate.UpdatedAt.After(finit) || rate.UpdatedAt.Equal(finit))
+			assert.True(t, rate.UpdatedAt.Before(fend) || rate.UpdatedAt.Equal(fend))
+		}
+
+		// Test 2: USD currency and finit
+		result = cr.GetByCurrencyAndBetweenDates(currency, finit, time.Time{})
+		assert.NotNil(t, result)
+		assert.IsType(t, []CurrencyRate{}, result)
+		assert.LessOrEqual(t, len(result), 1)
+		if len(result) > 0 {
+			assert.True(t, result[0].UpdatedAt.After(finit) || result[0].UpdatedAt.Equal(finit))
+		}
+
+		// Test 3: USD currency and fend
+		result = cr.GetByCurrencyAndBetweenDates(currency, time.Time{}, fend)
+		assert.NotNil(t, result)
+		assert.IsType(t, []CurrencyRate{}, result)
+		assert.Greater(t, len(result), 0)
+		for _, rate := range result {
+			assert.True(t, rate.UpdatedAt.Before(fend) || rate.UpdatedAt.Equal(fend))
+		}
+
+		// Test 4: USD currency and between dates
+		result = cr.GetByCurrencyAndBetweenDates(currency, finit, fend)
+		assert.NotNil(t, result)
+		assert.IsType(t, []CurrencyRate{}, result)
+		assert.Greater(t, len(result), 0)
+		for _, rate := range result {
+			assert.True(t, rate.UpdatedAt.After(finit) || rate.UpdatedAt.Equal(finit))
+			assert.True(t, rate.UpdatedAt.Before(fend) || rate.UpdatedAt.Equal(fend))
+		}
+
+		db.Exec("DELETE FROM currency_rates")
+	})
+}
+
+func fakeDatabaseConnection(cR *currencyRepo) (*gorm.DB, error) {
 	dsn := "host=localhost user=postgres password=postgres dbname=currency_test sslmode=disable"
 	db, err := gorm.Open(postgres.New(postgres.Config{DSN: dsn}))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	dbResult := CurrencyRepo.Initialize(db)
-	return dbResult, db, nil
+	dbResult := cR.Initialize(db)
+	return dbResult, nil
 }

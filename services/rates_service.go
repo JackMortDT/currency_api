@@ -66,8 +66,6 @@ func apiRequest() (*http.Response, error_utils.MessageErr) {
 
 		return nil, error_utils.NewServiceUnavailableError(errorMessage)
 	}
-	defer resp.Body.Close()
-
 	return resp, nil
 }
 

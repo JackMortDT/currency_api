@@ -53,8 +53,16 @@ func (cR *currencyRepo) GetByCurrencyAndBetweenDates(currency string, finit, fen
 	var currencies []CurrencyRate
 	query := cR.db
 
-	if currency != "all" {
+	if currency != "ALL" {
 		query = query.Where(CurrencyRate{Code: currency})
+	}
+
+	if !finit.IsZero() && fend.IsZero() {
+		query = query.Where("updated_at >= ?", finit)
+	} else if finit.IsZero() && !fend.IsZero() {
+		query = query.Where("updated_at <= ?", fend)
+	} else if !finit.IsZero() && !fend.IsZero() {
+		query = query.Where("updated_at BETWEEN ? AND ?", finit, fend)
 	}
 
 	result := query.Find(&currencies)
