@@ -55,14 +55,14 @@ func saveCallRecord(requestDate time.Time, duration int64) {
 	domain.CallRecordRepo.Create(&domain.CallRecord{
 		RequestDate: requestDate,
 		Duration:    duration,
-		Sucess:      true,
+		Success:     true,
 	})
 }
 
 func saveFailCallRecord(requestDate time.Time) {
 	domain.CallRecordRepo.Create(&domain.CallRecord{
 		RequestDate: requestDate,
-		Sucess:      false,
+		Success:     false,
 	})
 
 }

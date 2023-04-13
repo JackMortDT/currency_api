@@ -10,5 +10,5 @@ type CallRecord struct {
 	gorm.Model
 	RequestDate time.Time
 	Duration    int64
-	Sucess      bool
+	Success     bool
 }
