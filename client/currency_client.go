@@ -18,8 +18,6 @@ func ApiRequest() (*http.Response, error_utils.MessageErr) {
 	timeout, err := strconv.Atoi(stringTimeout)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error converting timeout from env")
-		log.Print(errorMessage)
-
 		return nil, error_utils.NewInternalServerError(errorMessage)
 	}
 
@@ -29,8 +27,6 @@ func ApiRequest() (*http.Response, error_utils.MessageErr) {
 
 	if err != nil {
 		errorMessage := fmt.Sprintf("Error requesting currency API: %s", err)
-		log.Print(errorMessage)
-
 		return nil, error_utils.NewServiceUnavailableError(errorMessage)
 	}
 	return resp, nil
