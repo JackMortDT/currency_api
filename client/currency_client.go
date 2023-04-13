@@ -3,7 +3,6 @@ package client
 import (
 	"currency_api/utils/error_utils"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
