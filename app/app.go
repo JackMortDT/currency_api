@@ -1,6 +1,7 @@
 package app
 
 import (
+	"currency_api/routines"
 	"log"
 	"net/http"
 	"time"
@@ -21,6 +22,7 @@ func StartApp() {
 	db := connectToDatabase()
 	startRepositories(db)
 	routes()
+	routines.ExecuteApiRequest()
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
