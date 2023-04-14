@@ -155,7 +155,7 @@ func TestSaveCurrencyResponse(t *testing.T) {
 		Data: command.Data{"USD": {Code: "USD", Value: 1}},
 	}
 
-	err := RatesService.saveCurrencyResponse(rate)
+	err := saveCurrencyResponse(rate)
 	assert.NoError(t, err)
 }
 
@@ -170,7 +170,7 @@ func TestSaveCurrencyResponse_WithError(t *testing.T) {
 		Data: command.Data{"USD": {Code: "USD", Value: 1}},
 	}
 
-	err := RatesService.saveCurrencyResponse(rate)
+	err := saveCurrencyResponse(rate)
 	assert.EqualValues(t, err.Message(), "Fail to insert into database")
 
 }
