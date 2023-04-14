@@ -31,7 +31,7 @@ func TestApiRequest(t *testing.T) {
 	os.Setenv("API_KEY", "my-api-key")
 	os.Setenv("TIMEOUT", "5")
 
-	resp, err := ApiRequest()
+	resp, err := CurrencyClient.ApiRequest()
 
 	assert.Nil(t, err)
 
@@ -61,7 +61,7 @@ func TestApiRequest_InvalidTimeout(t *testing.T) {
 	os.Setenv("API_KEY", "my-api-key")
 	os.Setenv("TIMEOUT", "wrong_timeout")
 
-	resp, err := ApiRequest()
+	resp, err := CurrencyClient.ApiRequest()
 
 	assert.Nil(t, resp)
 	assert.NotNil(t, err)

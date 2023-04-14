@@ -9,7 +9,15 @@ import (
 	"time"
 )
 
-func ApiRequest() (*http.Response, error_utils.MessageErr) {
+var CurrencyClient currencyClientInterface = &currencyClient{}
+
+type currencyClient struct{}
+
+type currencyClientInterface interface {
+	ApiRequest() (*http.Response, error_utils.MessageErr)
+}
+
+func (cC *currencyClient) ApiRequest() (*http.Response, error_utils.MessageErr) {
 	currencyUrl := os.Getenv("CURRENCY_URL")
 	apiKey := os.Getenv("API_KEY")
 	stringTimeout := os.Getenv("TIMEOUT")
