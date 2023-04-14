@@ -23,7 +23,7 @@ func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 	start := time.Now()
 	resp, requestErr := client.ApiRequest()
 	if requestErr != nil {
-		saveFailCallRecord(start)
+		CallRecordService.SaveFailCallRecord(start)
 		return nil, requestErr
 	}
 	duration := time.Since(start).Milliseconds()
@@ -38,31 +38,21 @@ func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 
 	}
 
-	saveCurrencyResponse(&rates)
-	saveCallRecord(start, duration)
+	if saveError := saveCurrencyResponse(&rates); saveError != nil {
+		return nil, saveError
+	}
+	CallRecordService.SaveCallRecord(start, duration)
 
 	return &rates, nil
 }
 
-func saveCurrencyResponse(rates *command.Rate) {
+func saveCurrencyResponse(rates *command.Rate) error_utils.MessageErr {
 	currencyRates := command.ConvertToCurrencyRates(rates)
 	for _, currencyRate := range currencyRates {
-		domain.CurrencyRepo.CreateOrUpdate(currencyRate)
+		if err := domain.CurrencyRepo.CreateOrUpdate(currencyRate); err != nil {
+			return err
+		}
+
 	}
-}
-
-func saveCallRecord(requestDate time.Time, duration int64) {
-	domain.CallRecordRepo.Create(&domain.CallRecord{
-		RequestDate: requestDate,
-		Duration:    duration,
-		Success:     true,
-	})
-}
-
-func saveFailCallRecord(requestDate time.Time) {
-	domain.CallRecordRepo.Create(&domain.CallRecord{
-		RequestDate: requestDate,
-		Success:     false,
-	})
-
+	return nil
 }
