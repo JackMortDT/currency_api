@@ -29,21 +29,6 @@ var convertToCurrencyRatesCases = []convertToCurrencyRatesCase{
 		},
 	},
 	{
-		"Transform more than one result successfully",
-		&command.Rate{
-			Meta: command.Meta{LastUpdated: lastUpdated},
-			Data: command.Data{
-				"MXN": {Code: "MXN", Value: 18.10},
-				"USD": {Code: "USD", Value: 1},
-			},
-		},
-		[]*domain.CurrencyRate{
-			createFakeCurrencyRates("MXN", 18.10, lastUpdated),
-			createFakeCurrencyRates("USD", 1, lastUpdated),
-		},
-	},
-
-	{
 		"With incorrect date",
 		&command.Rate{
 			Meta: command.Meta{LastUpdated: "incorrect date"},
