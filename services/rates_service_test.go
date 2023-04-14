@@ -1,9 +1,13 @@
 package services
 
 import (
+	"currency_api/client"
 	"currency_api/command"
 	"currency_api/domain"
 	"currency_api/utils/error_utils"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -16,9 +20,15 @@ var (
 	getAll                       func() ([]domain.CurrencyRate, error_utils.MessageErr)
 	createOrUpdate               func(currencyRate *domain.CurrencyRate) error_utils.MessageErr
 	getByCurrencyAndBetweenDates func(currency string, finit, fend time.Time) ([]domain.CurrencyRate, error_utils.MessageErr)
+	apiRequest                   func() (*http.Response, error_utils.MessageErr)
 )
 
 type repoMock struct{}
+type clientMock struct{}
+
+func (m *clientMock) ApiRequest() (*http.Response, error_utils.MessageErr) {
+	return apiRequest()
+}
 
 func (m *repoMock) Initialize(db *gorm.DB) *gorm.DB {
 	return initialize(db)
@@ -67,6 +77,71 @@ func TestGetCurrencyRates_WithError(t *testing.T) {
 	currencies, err := RatesService.GetCurrencyRates(currency, finit, fend)
 	assert.Nil(t, currencies)
 	assert.EqualValues(t, err.Message(), "Error to get currencies")
+}
+
+func TestRequestCurrencyRates(t *testing.T) {
+	domain.CurrencyRepo = &repoMock{}
+	createOrUpdate = func(currencyRate *domain.CurrencyRate) error_utils.MessageErr {
+		return nil
+	}
+	client.CurrencyClient = &clientMock{}
+	apiRequest = func() (*http.Response, error_utils.MessageErr) {
+		rate := command.Rate{
+			Meta: command.Meta{
+				LastUpdated: "2023-04-13T23:59:59Z",
+			},
+			Data: command.Data{
+				"USD": {
+					Code:  "USD",
+					Value: 1,
+				},
+				"MXN": {
+					Code:  "MXN",
+					Value: 18.17,
+				},
+			},
+		}
+		body, _ := json.Marshal(rate)
+
+		response := httptest.NewRecorder()
+		response.WriteHeader(http.StatusOK)
+		response.Write(body)
+		return response.Result(), nil
+	}
+
+	_, err := RatesService.RequestCurrencyRates()
+	assert.NoError(t, err)
+}
+
+func TestRequestCurrencyRates_WithErrorFromApiRequest(t *testing.T) {
+	domain.CurrencyRepo = &repoMock{}
+	createOrUpdate = func(currencyRate *domain.CurrencyRate) error_utils.MessageErr {
+		return nil
+	}
+	client.CurrencyClient = &clientMock{}
+	apiRequest = func() (*http.Response, error_utils.MessageErr) {
+		return nil, error_utils.NewInternalServerError("Error on currency API")
+	}
+
+	_, err := RatesService.RequestCurrencyRates()
+	assert.NotNil(t, err)
+	assert.EqualValues(t, err.Message(), "Error on currency API")
+}
+
+func TestRequestCurrencyRates_WithErrorOnResponseFromApiRequest(t *testing.T) {
+	domain.CurrencyRepo = &repoMock{}
+	createOrUpdate = func(currencyRate *domain.CurrencyRate) error_utils.MessageErr {
+		return nil
+	}
+	client.CurrencyClient = &clientMock{}
+	apiRequest = func() (*http.Response, error_utils.MessageErr) {
+		response := httptest.NewRecorder()
+		response.WriteHeader(http.StatusInternalServerError)
+		return response.Result(), nil
+	}
+
+	_, err := RatesService.RequestCurrencyRates()
+	assert.NotNil(t, err)
 }
 
 func TestSaveCurrencyResponse(t *testing.T) {

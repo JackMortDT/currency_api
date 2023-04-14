@@ -31,7 +31,7 @@ func (rS *ratesService) GetCurrencyRates(currency string, finit, fend time.Time)
 
 func (rS *ratesService) RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 	start := time.Now()
-	resp, requestErr := client.ApiRequest()
+	resp, requestErr := client.CurrencyClient.ApiRequest()
 	if requestErr != nil {
 		CallRecordService.SaveFailCallRecord(start)
 		return nil, requestErr
