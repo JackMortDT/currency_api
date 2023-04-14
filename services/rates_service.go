@@ -11,7 +11,17 @@ import (
 	"time"
 )
 
-func GetCurrencyRates(currency string, finit, fend time.Time) ([]domain.CurrencyRate, error_utils.MessageErr) {
+var RatesService ratesServiceInterface = &ratesService{}
+
+type ratesService struct{}
+
+type ratesServiceInterface interface {
+	GetCurrencyRates(string, time.Time, time.Time) ([]domain.CurrencyRate, error_utils.MessageErr)
+	RequestCurrencyRates() (*command.Rate, error_utils.MessageErr)
+	saveCurrencyResponse(*command.Rate) error_utils.MessageErr
+}
+
+func (rS *ratesService) GetCurrencyRates(currency string, finit, fend time.Time) ([]domain.CurrencyRate, error_utils.MessageErr) {
 	currencies, err := domain.CurrencyRepo.GetByCurrencyAndBetweenDates(currency, finit, fend)
 	if err != nil {
 		return nil, err
@@ -19,7 +29,7 @@ func GetCurrencyRates(currency string, finit, fend time.Time) ([]domain.Currency
 	return currencies, nil
 }
 
-func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
+func (rS *ratesService) RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 	start := time.Now()
 	resp, requestErr := client.ApiRequest()
 	if requestErr != nil {
@@ -38,7 +48,7 @@ func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 
 	}
 
-	if saveError := saveCurrencyResponse(&rates); saveError != nil {
+	if saveError := RatesService.saveCurrencyResponse(&rates); saveError != nil {
 		return nil, saveError
 	}
 	CallRecordService.SaveCallRecord(start, duration)
@@ -46,7 +56,7 @@ func RequestCurrencyRates() (*command.Rate, error_utils.MessageErr) {
 	return &rates, nil
 }
 
-func saveCurrencyResponse(rates *command.Rate) error_utils.MessageErr {
+func (rS *ratesService) saveCurrencyResponse(rates *command.Rate) error_utils.MessageErr {
 	currencyRates := command.ConvertToCurrencyRates(rates)
 	for _, currencyRate := range currencyRates {
 		if err := domain.CurrencyRepo.CreateOrUpdate(currencyRate); err != nil {

@@ -49,7 +49,7 @@ func TestGetCurrencyRates(t *testing.T) {
 	finit := time.Now()
 	fend := time.Now()
 
-	currencies, err := GetCurrencyRates(currency, finit, fend)
+	currencies, err := RatesService.GetCurrencyRates(currency, finit, fend)
 	assert.NoError(t, err)
 	assert.EqualValues(t, len(currencies), 1)
 }
@@ -64,7 +64,7 @@ func TestGetCurrencyRates_WithError(t *testing.T) {
 	finit := time.Now()
 	fend := time.Now()
 
-	currencies, err := GetCurrencyRates(currency, finit, fend)
+	currencies, err := RatesService.GetCurrencyRates(currency, finit, fend)
 	assert.Nil(t, currencies)
 	assert.EqualValues(t, err.Message(), "Error to get currencies")
 }
@@ -80,7 +80,7 @@ func TestSaveCurrencyResponse(t *testing.T) {
 		Data: command.Data{"USD": {Code: "USD", Value: 1}},
 	}
 
-	err := saveCurrencyResponse(rate)
+	err := RatesService.saveCurrencyResponse(rate)
 	assert.NoError(t, err)
 }
 
@@ -95,7 +95,7 @@ func TestSaveCurrencyResponse_WithError(t *testing.T) {
 		Data: command.Data{"USD": {Code: "USD", Value: 1}},
 	}
 
-	err := saveCurrencyResponse(rate)
+	err := RatesService.saveCurrencyResponse(rate)
 	assert.EqualValues(t, err.Message(), "Fail to insert into database")
 
 }

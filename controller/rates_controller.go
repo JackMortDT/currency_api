@@ -41,7 +41,7 @@ func GetCurrencyRates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rates, currencyErr := services.GetCurrencyRates(currency, finit, fend)
+	rates, currencyErr := services.RatesService.GetCurrencyRates(currency, finit, fend)
 	if currencyErr != nil {
 		http.Error(w, currencyErr.Error(), currencyErr.Status())
 		return
@@ -59,7 +59,7 @@ func GetCurrencyRates(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateNewCurrencies(w http.ResponseWriter, r *http.Request) {
-	rates, err := services.RequestCurrencyRates()
+	rates, err := services.RatesService.RequestCurrencyRates()
 	if err != nil {
 		http.Error(w, err.Error(), err.Status())
 		return

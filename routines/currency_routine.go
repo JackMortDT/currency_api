@@ -10,7 +10,7 @@ func ExecuteApiRequest() {
 	log.Println("Inicio de proceso de la goroutine")
 	go func() {
 		for {
-			_, err := services.RequestCurrencyRates()
+			_, err := services.RatesService.RequestCurrencyRates()
 			if err != nil {
 				log.Println("Ocurrio un error a la hora de ejecutar currency rates")
 			}
